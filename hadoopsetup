@@ -1,0 +1,165 @@
+
+Step 1: Install WSL
+Open Command Prompt or PowerShell as Administrator:
+wsl --install
+Install Ubuntu:
+wsl --install -d Ubuntu
+
+Step 2: Install Java
+
+sudo apt update
+sudo apt install openjdk-8-jdk -y
+java -version
+
+Step 3: Set `JAVA_HOME`
+
+Find the Java path:
+readlink -f $(which java) | sed "s:bin/java::"
+
+Open `.bashrc`:
+nano ~/.bashrc
+
+Add:
+
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+export PATH=$PATH:$JAVA_HOME/bin
+
+Apply and verify:
+source ~/.bashrc
+echo $JAVA_HOME
+
+
+Step 4: Download and Extract Hadoop
+wget https://downloads.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+tar -xvzf hadoop-3.3.6.tar.gz
+mv hadoop-3.3.6 hadoop
+
+Step 5: Set Hadoop Environment Variables
+
+nano ~/.bashrc
+Add:
+export HADOOP_HOME=~/hadoop
+export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+
+
+Apply:
+source ~/.bashrc
+
+
+Step 6: Configure Hadoop
+Go to the configuration directory:
+cd ~/hadoop/etc/hadoop
+
+
+6.1 Configure `core-site.xml`
+nano core-site.xml
+<configuration>
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://localhost:9000</value>
+    </property>
+</configuration>
+
+
+6.2 Configure `hdfs-site.xml`
+
+nano hdfs-site.xml
+<configuration>
+    <property>
+        <name>dfs.replication</name>
+        <value>1</value>
+    </property>
+</configuration>
+
+6.3 Configure `mapred-site.xml`
+
+nano mapred-site.xml
+<configuration>
+    <property>
+        <name>mapreduce.framework.name</name>
+        <value>yarn</value>
+    </property>
+</configuration>
+
+
+6.4 Configure `yarn-site.xml`
+
+nano yarn-site.xml
+<configuration>
+    <property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+    </property>
+</configuration>
+
+
+Step 7: Configure `hadoop-env.sh`
+nano ~/hadoop/etc/hadoop/hadoop-env.sh
+
+
+Set:
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+
+
+Step 8: Configure SSH
+
+Install SSH:
+sudo apt install openssh-server -y
+
+
+Generate an SSH key:
+ssh-keygen -t rsa
+
+
+Press Enter to accept the default settings and keep the password empty.
+Authorize the key:
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+
+
+Start SSH:
+sudo service ssh start
+
+
+Test:
+ssh localhost
+Type `yes` when prompted.
+
+Step 9: Format the NameNode
+
+hdfs namenode -format
+
+Step 10: Start Hadoop Services
+
+start-dfs.sh
+start-yarn.sh
+
+
+Step 11: Verify Running Services
+jps
+Expected processes include:
+
+text
+NameNode
+DataNode
+SecondaryNameNode
+ResourceManager
+NodeManager
+Jps
+
+
+Step 12: Access Hadoop Web Interfaces
+HDFS NameNode: `http://localhost:9870`
+YARN ResourceManager: `http://localhost:8088`
+
+Step 13: Test HDFS Operations
+Create a directory:
+hdfs dfs -mkdir /test
+
+Create a sample file:
+echo "Hello Hadoop" > file.txt
+
+Upload it to HDFS:
+hdfs dfs -put file.txt /test
+
+View the file:
+hdfs dfs -cat /test/file.txt
