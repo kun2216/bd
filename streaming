@@ -1,0 +1,40 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import explode, split
+
+# Create Spark Session
+spark = SparkSession.builder \
+    .appName("StreamingWordCount") \
+    .getOrCreate()
+
+# Reduce unnecessary logs
+spark.sparkContext.setLogLevel("ERROR")
+
+# Read streaming data from folder
+df = spark.readStream \
+    .format("text") \
+    .load("stream_data")
+
+# Split lines into words
+words = df.select(
+    explode(split(df.value, " ")).alias("word")
+)
+
+# Count words
+word_counts = words.groupBy("word").count()
+
+# Display output in console
+query = word_counts.writeStream \
+    .outputMode("complete") \
+    .format("console") \
+    .start()
+
+# Keep application running
+query.awaitTermination()
+
+
+mkdir -p stream_data
+$SPARK_HOME/bin/spark-submit streaming_app.py
+
+echo "hello spark streaming" > stream_data/file1.txt
+
+echo "hello big data spark" > stream_data/file2.txt
