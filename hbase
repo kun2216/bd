@@ -1,0 +1,85 @@
+Step 1: Download HBase
+
+bash id="0a8vlx"
+wget https://archive.apache.org/dist/hbase/2.4.17/hbase-2.4.17-bin.tar.gz
+
+Step 2: Extract HBase
+bash id="2m52n4"
+tar -xvzf hbase-2.4.17-bin.tar.gz
+mv hbase-2.4.17 hbase
+
+Step 3: Set Environment Variables
+
+Find the Java path:
+bash id="ajwok2"
+readlink -f $(which java)
+
+Open `.bashrc`:
+bash id="dugrb0"
+nano ~/.bashrc
+
+
+Add:
+bash id="70e86w"
+export HBASE_HOME=~/hbase
+export PATH=$PATH:$HBASE_HOME/bin
+
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+export PATH=$PATH:$JAVA_HOME/bin
+
+Apply changes:
+bash id="jvkkdt"
+source ~/.bashrc
+
+
+Step 4: Configure HBase in Standalone Mode
+
+bash id="f92dg0"
+nano ~/hbase/conf/hbase-site.xml
+
+
+Add:
+
+xml id="hmfwr3"
+<configuration>
+    <property>
+        <name>hbase.rootdir</name>
+        <value>file:///home/dev0/hbase_data</value>
+    </property>
+</configuration>
+
+> Replace `dev0` with your actual Ubuntu username. You can check it using `whoami`.
+
+Step 5: Start HBase
+
+bash id="ryiq90"
+start-hbase.sh
+
+
+Step 6: Open HBase Shell
+bash id="zyat3q"
+hbase shell
+
+
+Step 7: Create Table
+ruby id="nqdk57"
+create 'student', 'info'
+
+Step 8: Insert Data
+
+ruby id="ivhzqn"
+put 'student', '1', 'info:name', 'Alice'
+put 'student', '1', 'info:age', '22'
+
+put 'student', '2', 'info:name', 'Bob'
+put 'student', '2', 'info:age', '24'
+
+
+Step 9: Retrieve Data
+Scan the complete table:
+ruby id="vr9z4j"
+scan 'student'
+Get a specific row:
+
+ruby id="aqnmj4"
+get 'student', '1'
