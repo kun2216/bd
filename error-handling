@@ -1,0 +1,80 @@
+source spark_env/bin/activate
+pyspark
+
+# Import required function
+from pyspark.sql.functions import col
+
+# Step 1: Create Sample Data
+data = [
+    ("Alice", "25"),
+    ("Bob", "thirty"),
+    ("Charlie", "35"),
+    ("David", None)
+]
+
+columns = ["Name", "Age"]
+
+df = spark.createDataFrame(data, columns)
+
+print("Original Data:")
+df.show()
+
+
+# Step 2: Handle Errors - Data Cleaning
+df_clean = df.filter(
+    col("Age").cast("int").isNotNull()
+)
+
+print("Cleaned Data:")
+df_clean.show()
+
+
+# Step 3: Error Handling using Try-Except
+def safe_convert(x):
+    try:
+        return int(x)
+    except:
+        return None
+
+
+# Convert DataFrame to RDD and process data
+rdd = df.rdd
+
+processed_rdd = rdd.map(
+    lambda row: (
+        row["Name"],
+        safe_convert(row["Age"])
+    )
+)
+
+# Convert RDD back to DataFrame
+df_processed = processed_rdd.toDF(["Name", "Age"])
+
+print("Processed Data:")
+df_processed.show()
+
+
+# Step 4: Data Recovery - Handle Missing Values
+df_final = df_processed.fillna({"Age": 0})
+
+print("Final Data:")
+df_final.show()
+
+
+# Step 5: Save Processed Data
+df_final.write \
+    .mode("overwrite") \
+    .option("header", "true") \
+    .csv("output_data")
+
+print("Data saved successfully.")
+
+
+# Step 6: Reload Data
+df_recovered = spark.read \
+    .option("header", "true") \
+    .option("inferSchema", "true") \
+    .csv("output_data")
+
+print("Recovered Data:")
+df_recovered.show()
